@@ -1,8 +1,24 @@
 # -*- coding: utf-8 -*-
+
+import sqlite3
+import numpy as np
+import pandas as pd
+
 import dash
 from dash.dependencies import Event, Input, Output
 import dash_core_components as dcc
 import dash_html_components as html
+import plotly.graph_objs as go
+
+# Prepare data
+
+conn = sqlite3.connect('data/transactions.db')
+df = pd.read_sql("""
+    SELECT date, amount
+    FROM transactions
+    WHERE transaction_type == 'credit' AND category <> 'Transfer'
+    """, conn)
+conn.close()
 
 app = dash.Dash()
 
@@ -16,18 +32,35 @@ layout = html.Div([
         Dash: A web application framework for Python.
     '''),
 
+    html.H3('My Graph'),
+
+    dcc.Graph(
+        figure=go.Figure(
+            data=[
+                go.Scatter(
+                    x = df['date'],
+                    y = df['amount']
+                )
+            ],
+        ),
+        id='my-graph'
+    ),
+
+    html.H3('Example Graph'),
+
     dcc.Graph(
         id='example-graph',
         figure={
             'data': [
                 {'x': [1, 2, 3], 'y': [4, 1, 2], 'type': 'bar', 'name': 'SF'},
-                {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': u'Montréal'},
             ],
             'layout': {
-                'title': 'Dash Data Visualization'
+                'title': 'example graph'
             }
         }
     )
+
+
 ])
 
 # does not refresh
